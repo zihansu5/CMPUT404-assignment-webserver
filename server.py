@@ -63,10 +63,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.request.sendall(bytearray(response,'utf-8'))
 
     def moved_permanently_301(self, path):
-        location = 'http://' + self.host_port + path
-        response = f"HTTP/1.1 301 Moved Permanently\r\nConection: closed\r\n"
-        self.request.sendall(bytearray(response,'utf-8'))
-        #self.request.sendall(bytearray(f'Location: {location}\r\n)', 'utf-8'))
+        location = 'http://' + self.host_port + '/' + path
+        response = f"HTTP/1.1 301 Moved Permanently\r\nConnection: closed\r\n\r\n{location}"
+        
+        self.request.sendall(bytearray(response,'utf-8'))       
 
     def is_safe_path(self, path, follow_symlinks=True):
         basedir = os.path.abspath('www')
@@ -94,7 +94,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         content = file.read()
         content_type = self.check_type(path) 
         response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n{content}\r\n'
-        print(response)
+        #print(response)
         self.request.sendall(bytearray(response,'utf-8'))
 
     
