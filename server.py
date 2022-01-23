@@ -33,7 +33,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         self.host_port = self.data.decode().split('\n')[2].split()[1]
-        print(self.host_port)
         #print ("Got a request of: %s\n" % self.data.decode())
 
         #check methos
@@ -43,13 +42,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
         else:
             #check path
             self.path = 'www' + self.data.decode().split()[1]
-            # check paths end with '/'
-            if os.path.isdir(self.path):
-                self.handle_dir(self.path)
-            elif os.path.isfile(self.path):
-                self.handle_file(self.path)
-            else:
+            if not self.is_safe_path(self.path):
                 self.path_not_found_404()
+            else:
+                # check paths end with '/'
+                if os.path.isdir(self.path):
+                    self.handle_dir(self.path)
+                elif os.path.isfile(self.path):
+                    self.handle_file(self.path)
+                else:
+                    self.path_not_found_404()
 
         self.request.sendall(bytearray("OK",'utf-8'))
 
@@ -66,6 +68,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
         response = f"HTTP/1.1 301 Moved Permanently\r\nConection: closed\r\n"
         self.request.sendall(bytearray(response,'utf-8'))
         #self.request.sendall(bytearray(f'Location: {location}\r\n)', 'utf-8'))
+
+    def is_safe_path(self, path, follow_symlinks=True):
+        basedir = os.path.abspath('www')
+        matchpath = os.path.realpath(path)
+        return basedir == os.path.commonpath((basedir, matchpath))
+
 
     def handle_dir(self, path):
         if path[-1] == '/':
@@ -92,6 +100,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     
     def check_type(self, path):
+        type = None
         if path.endswith('.html'):
             type = 'text/html'
         if path.endswith('.css'):
