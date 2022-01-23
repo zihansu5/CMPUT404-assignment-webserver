@@ -45,7 +45,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
             if not self.is_safe_path(self.path):
                 self.path_not_found_404()
             else:
-                # check paths end with '/'
                 if os.path.isdir(self.path):
                     self.handle_dir(self.path)
                 elif os.path.isfile(self.path):
@@ -53,7 +52,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 else:
                     self.path_not_found_404()
 
-        self.request.sendall(bytearray("OK",'utf-8'))
+        #self.request.sendall(bytearray("OK",'utf-8'))
 
     def path_not_found_404(self):
         response = 'HTTP/1.1 404 Not Found\r\nConnection: Closed\r\n'
@@ -81,11 +80,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
             if os.path.isfile(path):
                 file = open(path)
                 content = file.read()
-                response = f'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: Closed\r\n{content}\r\n'
+                response = f'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: Closed\r\n{content}\r\n\r\n'
                 self.request.sendall(bytearray(response,'utf-8'))
             else:
                 self.path_not_found_404(path)
-
         else:
             # 301 - correct paths
             path += '/'
@@ -96,6 +94,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         content = file.read()
         content_type = self.check_type(path) 
         response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n{content}\r\n'
+        print(response)
         self.request.sendall(bytearray(response,'utf-8'))
 
     
