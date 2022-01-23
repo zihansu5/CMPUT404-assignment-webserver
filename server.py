@@ -33,10 +33,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         self.host_port = self.data.decode().split('\n')[2].split()[1]
-        #print ("Got a request of: %s\n" % self.data.decode())
+        #print ("Got a request of: %s\n" % self.data.decode('utf-8'))
 
-        #check methos
+        #check methods
         self.method = self.data.decode().split()[0]
+        #self.method = self.data.split()[0].decode('utf-8')
         if self.method != 'GET':
             self.method_not_allowed_405()
         else:
@@ -55,11 +56,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #self.request.sendall(bytearray("OK",'utf-8'))
 
     def path_not_found_404(self):
-        response = 'HTTP/1.1 404 Not Found\r\nConnection: Closed\r\n'
+        response = 'HTTP/1.1 404 Not Found\r\nConnection: Closed\r\n\r\n'
         self.request.sendall(bytearray(response,'utf-8'))
 
     def method_not_allowed_405(self):
-        response = 'HTTP/1.1 405 Method Not Allowed\r\nConnection: Closed\r\n'
+        response = 'HTTP/1.1 405 Method Not Allowed\r\nConnection: Closed\r\n\r\n'
         self.request.sendall(bytearray(response,'utf-8'))
 
     def moved_permanently_301(self, path):
@@ -78,12 +79,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
         if path[-1] == '/':
             path += 'index.html'
             if os.path.isfile(path):
-                file = open(path)
+                file = open(path, 'r')
                 content = file.read()
-                response = f'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: Closed\r\n{content}\r\n\r\n'
+                file.close()
+                response = f'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: Closed\r\n\r\n{content}\r\n'
                 self.request.sendall(bytearray(response,'utf-8'))
             else:
-                self.path_not_found_404(path)
+                self.path_not_found_404()
         else:
             # 301 - correct paths
             path += '/'
@@ -92,8 +94,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def handle_file(self, path):
         file = open(path)
         content = file.read()
+        file.close()
         content_type = self.check_type(path) 
-        response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n{content}\r\n'
+        response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n\r\n{content}\r\n'
         #print(response)
         self.request.sendall(bytearray(response,'utf-8'))
 
