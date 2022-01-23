@@ -1,5 +1,6 @@
 #  coding: utf-8 
 import socketserver
+import os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -31,8 +32,72 @@ class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
+        self.host_port = self.data.decode().split('\n')[2].split()[1]
+        print(self.host_port)
+        #print ("Got a request of: %s\n" % self.data.decode())
+
+        #check methos
+        self.method = self.data.decode().split()[0]
+        if self.method != 'GET':
+            self.method_not_allowed_405()
+        else:
+            #check path
+            self.path = 'www' + self.data.decode().split()[1]
+            # check paths end with '/'
+            if os.path.isdir(self.path):
+                self.handle_dir(self.path)
+            elif os.path.isfile(self.path):
+                self.handle_file(self.path)
+            else:
+                self.path_not_found_404()
+
         self.request.sendall(bytearray("OK",'utf-8'))
+
+    def path_not_found_404(self):
+        response = 'HTTP/1.1 404 Not Found\r\nConnection: Closed\r\n'
+        self.request.sendall(bytearray(response,'utf-8'))
+
+    def method_not_allowed_405(self):
+        response = 'HTTP/1.1 405 Method Not Allowed\r\nConnection: Closed\r\n'
+        self.request.sendall(bytearray(response,'utf-8'))
+
+    def moved_permanently_301(self, path):
+        location = 'http://' + self.host_port + path
+        response = f"HTTP/1.1 301 Moved Permanently\r\nConection: closed\r\n"
+        self.request.sendall(bytearray(response,'utf-8'))
+        #self.request.sendall(bytearray(f'Location: {location}\r\n)', 'utf-8'))
+
+    def handle_dir(self, path):
+        if path[-1] == '/':
+            path += 'index.html'
+            if os.path.isfile(path):
+                file = open(path)
+                content = file.read()
+                response = f'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: Closed\r\n{content}\r\n'
+                self.request.sendall(bytearray(response,'utf-8'))
+            else:
+                self.path_not_found_404(path)
+
+        else:
+            # 301 - correct paths
+            path += '/'
+            self.moved_permanently_301(path)
+
+    def handle_file(self, path):
+        file = open(path)
+        content = file.read()
+        content_type = self.check_type(path) 
+        response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n{content}\r\n'
+        self.request.sendall(bytearray(response,'utf-8'))
+
+    
+    def check_type(self, path):
+        if path.endswith('.html'):
+            type = 'text/html'
+        if path.endswith('.css'):
+            type = 'text/css'
+        return type
+    
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
