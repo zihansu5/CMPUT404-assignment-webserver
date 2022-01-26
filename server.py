@@ -32,17 +32,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        self.host_port = self.data.decode().split('\n')[2].split()[1]
+        self.host_port = self.data.decode('utf-8').split('\n')[2].split()[1]
         #print ("Got a request of: %s\n" % self.data.decode('utf-8'))
 
         #check methods
-        self.method = self.data.decode().split()[0]
-        #self.method = self.data.split()[0].decode('utf-8')
+        self.method = self.data.decode('utf-8').split()[0]
         if self.method != 'GET':
             self.method_not_allowed_405()
         else:
             #check path
-            self.path = 'www' + self.data.decode().split()[1]
+            self.path = 'www' + self.data.decode('utf-8').split()[1]
             if not self.is_safe_path(self.path):
                 self.path_not_found_404()
             else:
@@ -63,13 +62,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
         response = 'HTTP/1.1 405 Method Not Allowed\r\nConnection: Closed\r\n\r\n'
         self.request.sendall(bytearray(response,'utf-8'))
 
-    def moved_permanently_301(self, path):
-        location = 'http://' + self.host_port + '/' + path
-        response = f"HTTP/1.1 301 Moved Permanently\r\nConnection: closed\r\n\r\n{location}"
-        
+    def moved_permanently_301(self):
+        location = 'http://' + self.host_port + self.data.decode('utf-8').split()[1] + '/'
+        response = f"HTTP/1.1 301 Moved Permanently\r\nLocation: {location}\r\nConnection: closed\r\n\r\n"
+        #print(response)
         self.request.sendall(bytearray(response,'utf-8'))       
 
-    def is_safe_path(self, path, follow_symlinks=True):
+    def is_safe_path(self, path):
         basedir = os.path.abspath('www')
         matchpath = os.path.realpath(path)
         return basedir == os.path.commonpath((basedir, matchpath))
@@ -89,7 +88,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         else:
             # 301 - correct paths
             path += '/'
-            self.moved_permanently_301(path)
+            self.moved_permanently_301()
 
     def handle_file(self, path):
         file = open(path)
@@ -97,7 +96,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
         file.close()
         content_type = self.check_type(path) 
         response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n\r\n{content}\r\n'
-        #print(response)
         self.request.sendall(bytearray(response,'utf-8'))
 
     
