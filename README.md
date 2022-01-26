@@ -25,9 +25,13 @@ Software Foundation; All Rights Reserved under the PSF license (GPL
 compatible) http://docs.python.org/2/library/socketserver.html
 
 References:
+
 https://security.openstack.org/guidelines/dg_using-file-paths.html
+
 I simulated function is_safe_path() in the link above to prevent path traversal
+
 https://www.tutorialspoint.com/http/http_responses.htm
+
 I followed the format in the link above to write responses
 
 Collaborators:
