@@ -42,6 +42,14 @@ import os
 
 # try: curl -v -X GET http://127.0.0.1:8080/
 
+message_404 = "<html><head><title>404 Not Found</title></head><body><h1>Not Found</h1>\
+            <p>The requested URL /t.html was not found on this server.</p></body></html>"
+
+message_405 = "<html><head><title>405 Method Not Allowed</title></head><body><h1>Method Not Allowed</h1>\
+            <p>The requested URL /t.html was not allowed on this server.</p></body></html>"
+
+message_301 = "<html><head><title>301 Moved Permanently</title></head><body><h1>Moved Permanently</h1>\
+            <p>The requested URL /t.html was moved permanently on this server.</p></body></html>"
 
 class MyWebServer(socketserver.BaseRequestHandler):
     
@@ -70,16 +78,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #self.request.sendall(bytearray("OK",'utf-8'))
 
     def path_not_found_404(self):
-        response = 'HTTP/1.1 404 Not Found\r\nConnection: Closed\r\n\r\n'
+        response = f'HTTP/1.1 404 Not Found\r\nServer: zihansu\r\nContent-Type: text/html\r\nContent-Length: {len(message_404)}\r\nConnection: Closed\r\n\r\n'
         self.request.sendall(bytearray(response,'utf-8'))
 
     def method_not_allowed_405(self):
-        response = 'HTTP/1.1 405 Method Not Allowed\r\nConnection: Closed\r\n\r\n'
+        response = f'HTTP/1.1 405 Method Not Allowed\r\nServer: zihansu\r\nContent-Type: text/html\r\nContent-Length: {len(message_405)}\r\nConnection: Closed\r\n\r\n'
         self.request.sendall(bytearray(response,'utf-8'))
 
     def moved_permanently_301(self):
         location = 'http://' + self.host_port + self.data.decode('utf-8').split()[1] + '/'
-        response = f"HTTP/1.1 301 Moved Permanently\r\nLocation: {location}\r\nConnection: closed\r\n\r\n"
+        response = f"HTTP/1.1 301 Moved Permanently\r\nServer: zihansu\r\nContent-Type: text/plain\r\nContent-Length: {len(message_301)}\r\nConnection: closed\r\n\r\nLocation: {location}\r\n"
         #print(response)
         self.request.sendall(bytearray(response,'utf-8'))       
 
@@ -96,7 +104,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 file = open(path, 'r')
                 content = file.read()
                 file.close()
-                response = f'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: Closed\r\n\r\n{content}\r\n'
+                response = f'HTTP/1.1 200 OK\r\nServer: zihansu\r\nContent-Type: text/html\r\nContent-Length: {len(content)}\r\nConnection: Closed\r\n\r\n{content}\r\n'
                 self.request.sendall(bytearray(response,'utf-8'))
             else:
                 self.path_not_found_404()
@@ -110,7 +118,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         content = file.read()
         file.close()
         content_type = self.check_type(path) 
-        response = f'HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nConnection: Closed\r\n\r\n{content}\r\n'
+        response = f'HTTP/1.1 200 OK\r\nServer: zihansu\r\nContent-Type: {content_type}\r\nContent-Length: {len(content)}\r\nConnection: Closed\r\n\r\n{content}\r\n'
         self.request.sendall(bytearray(response,'utf-8'))
 
     
