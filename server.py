@@ -87,7 +87,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def moved_permanently_301(self):
         location = 'http://' + self.host_port + self.data.decode('utf-8').split()[1] + '/'
-        response = f"HTTP/1.1 301 Moved Permanently\r\nServer: zihansu\r\nContent-Type: text/plain\r\nContent-Length: {len(message_301)}\r\nConnection: closed\r\n\r\nLocation: {location}\r\n"
+        response = f"HTTP/1.1 301 Moved Permanently\r\nServer: zihansu\r\nContent-Type: text/html\r\nContent-Length: {len(message_301)}\r\nConnection: closed\r\n\r\nLocation: {location}\r\n"
         #print(response)
         self.request.sendall(bytearray(response,'utf-8'))       
 
